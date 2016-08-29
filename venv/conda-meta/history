@@ -1,8 +1,0 @@
-==> 2016-08-27 22:47:08 <==
-# cmd: C:\Anaconda3\Scripts\conda-script.py create -p C:\Users\Barbara\Documents\programming\sourceclub\venv python=3.5 -y
-pip-8.1.2-py35_0
-python-3.5.2-0
-setuptools-25.1.6-py35_0
-vs2015_runtime-14.0.25123-0
-wheel-0.29.0-py35_0
-# create specs: ['python 3.5*']
