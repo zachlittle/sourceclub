@@ -28,7 +28,7 @@ class LOWPRICEPRODUCT:
     SEARCHKEYWORD = ['dogs']
     EXCLUDEKEYWORD = ['cats, goats, mothar']
     PRICERANGE = ['10', '15']
-    NET = ['8', '']
+    NET = ['8']
     RANK = ['1', '10000']
     ESTIMATEDSALES = ['200', '4000']
     ESTIMATEDREVENUE = ['3000', '200']
@@ -78,7 +78,10 @@ class HIGHPRICEPRODUCT:
 class AutomateJSWork:
     def __init__(self):
         AutomateJSWork.Login()
+        AutomateJSWork.clickDatabase()
         AutomateJSWork.InputSearchTypeData(LOWPRICEPRODUCT)
+        AutomateJSWork.InputSearchTypeData(MEDIUMPRICEPRODUCT)
+        AutomateJSWork.InputSearchTypeData(HIGHPRICEPRODUCT)
         AutomateJSWork.Logout()
         driver.quit()
         '''        except:
@@ -88,6 +91,7 @@ class AutomateJSWork:
     @staticmethod
     def Login():
         driver.get('https://www.junglescout.com/')
+        driver.maximize_window()
         driver.implicitly_wait(100)
         driver.find_element_by_id('menu-item-4544').click()
         inputElementUsername = driver.find_element_by_id('user_login')
@@ -98,22 +102,35 @@ class AutomateJSWork:
 
     @staticmethod
     def Logout():
-        pass
-        # add find dropdown and select logout
+        element = driver.find_element_by_xpath(".//span[@class = 'username username-hide-on-mobile']")
+        element.click()
+        element2 = driver.find_element_by_xpath(".//a[@href = '/users/sign_out']")
+        element2.click()
 
     def clickSearch(self):
         element = driver.find_element_by_class_name('make-search')
         element.click()
 
+
     def InputSearchTypeData(searchType):
         print("CURRENTLY RUNNING " + str(searchType) + " SEARCH")
         driver.implicitly_wait(10)
-        driver.find_element_by_class_name('database-nav').click()
+        driver.find_element_by_class_name('filter-reset-btn').click()
         AutomateJSWork.inputData(searchType)
+        AutomateJSWork.clickSearch()
+        AutomateJSWork.clickExportToExcel()
+
+    @staticmethod
+    def clickDatabase():
+        driver.find_element_by_class_name('database-nav').click()
 
     def inputData(searchType):
         AutomateJSWork.clickDesiredCategories(searchType)
         MinMaxInputFieldDriver.enterAllData(searchType)
+        AutomateJSWork.clickProductTier(searchType)
+        AutomateJSWork.clickSeller(searchType)
+        AutomateJSWork.enterSearchKeyword(searchType)
+        AutomateJSWork.enterExcludedKeyword(searchType)
 
     def clickDesiredCategories(searchType):
         necItemsToClick = len(searchType.CATEGORIES)
@@ -127,6 +144,54 @@ class AutomateJSWork:
             else:
                 break
 
+    def clickProductTier(searchType):
+        necItemsToClick = len(searchType.PRODUCTTIER)
+        for listItem in searchType.PRODUCTTIER:
+            if necItemsToClick > 0:
+                allElem = driver.find_elements_by_xpath(".//div[@class = 'category-label-content']")
+                for item in allElem:
+                    if listItem in item.text:
+                        item.click()
+                        necItemsToClick -= 1
+            else:
+                break
+
+    def clickSeller(searchType):
+        necItemsToClick = len(searchType.SELLER)
+        for listItem in searchType.SELLER:
+            if necItemsToClick > 0:
+                allElem = driver.find_elements_by_xpath(".//div[@class = 'category-label-content']")
+                for item in allElem:
+                    if listItem in item.text:
+                        item.click()
+                        necItemsToClick -= 1
+            else:
+                break
+
+    @staticmethod
+    def clickSearch():
+        element = driver.find_element_by_class_name('make-search')
+        element.click()
+
+    @staticmethod
+    def clickExportToExcel():
+        element = driver.find_element_by_xpath(".//img[@alt = 'download-csv']")
+        element.click()
+
+    def enterSearchKeyword(searchType):
+        element = driver.find_element_by_class_name('db-keyword-search')
+        element.send_keys(Keys.CONTROL + "a")
+        element.send_keys(Keys.DELETE)
+        searchKeyword = str(searchType.SEARCHKEYWORD[0])
+        element.send_keys(searchKeyword)
+
+    def enterExcludedKeyword(searchType):
+        element = driver.find_element_by_class_name('db-exclude-keyword-search')
+        element.send_keys(Keys.CONTROL + "a")
+        element.send_keys(Keys.DELETE)
+        excludedKeyword = str(searchType.EXCLUDEKEYWORD[0])
+        element.send_keys(excludedKeyword)
+
 
 class MinMaxInputFieldDriver:
     def enterAllData(searchType):
@@ -138,88 +203,112 @@ class MinMaxInputFieldDriver:
         MinMaxInputFieldDriver.enterEstimatedRevenueRange(searchType)
         MinMaxInputFieldDriver.enterReviewsRange(searchType)
         MinMaxInputFieldDriver.enterRatingRange(searchType)
+        MinMaxInputFieldDriver.enterWeightRange(searchType)
+        MinMaxInputFieldDriver.enterNumberOfSellersRange(searchType)
+        MinMaxInputFieldDriver.enterListingQualityRange(searchType)
 
     def enterPriceRange(searchType):
         allElem = driver.find_elements_by_xpath(".//span[@class = 'db-filter-content']")
         for item in allElem:
             if "Price" in item.text:
                 if searchType.PRICERANGE[0] is not None:
-                    MinMaxInputFieldDriver.enterMin(item, searchType, MINMAXINDEXMAP['PRICERANGE'])
+                    MinMaxInputFieldDriver.enterMin(searchType.PRICERANGE[0], item, MINMAXINDEXMAP['PRICERANGE'])
                 if len(searchType.PRICERANGE) >= 2:
-                    MinMaxInputFieldDriver.enterMax(item, searchType, MINMAXINDEXMAP['PRICERANGE'])
+                    MinMaxInputFieldDriver.enterMax(searchType.PRICERANGE[1], item, MINMAXINDEXMAP['PRICERANGE'])
 
     def enterNetRange(searchType):
         allElem = driver.find_elements_by_xpath(".//span[@class = 'db-filter-content']")
         for item in allElem:
-            print(item.text)
             if "Net" in item.text:
                 if searchType.NET[0] is not None:
-                    MinMaxInputFieldDriver.enterMin(item, searchType, MINMAXINDEXMAP['NET'])
+                    MinMaxInputFieldDriver.enterMin(searchType.NET[0], item, MINMAXINDEXMAP['NET'])
                 if len(searchType.NET) >= 2:
-                    MinMaxInputFieldDriver.enterMax(item, searchType, MINMAXINDEXMAP['NET'])
+                    MinMaxInputFieldDriver.enterMax(searchType.NET[1], item, MINMAXINDEXMAP['NET'])
 
     def enterRankRange(searchType):
         allElem = driver.find_elements_by_xpath(".//span[@class = 'db-filter-content']")
         for item in allElem:
-            print(item.text)
             if "Rank" in item.text:
                 if searchType.RANK[0] is not None:
-                    MinMaxInputFieldDriver.enterMin(item, searchType, MINMAXINDEXMAP['RANK'])
+                    MinMaxInputFieldDriver.enterMin(searchType.RANK[0], item, MINMAXINDEXMAP['RANK'])
                 if len(searchType.RANK) >= 2:
-                    MinMaxInputFieldDriver.enterMax(item, searchType, MINMAXINDEXMAP['RANK'])
+                    MinMaxInputFieldDriver.enterMax(searchType.RANK[1], item, MINMAXINDEXMAP['RANK'])
 
     def enterEstimatedSalesRange(searchType):
         allElem = driver.find_elements_by_xpath(".//span[@class = 'db-filter-content']")
         for item in allElem:
-            print(item.text)
             if "Est. Sales" in item.text:
                 if searchType.ESTIMATEDSALES[0] is not None:
-                    MinMaxInputFieldDriver.enterMin(item, searchType, MINMAXINDEXMAP['ESTIMATEDSALES'])
+                    MinMaxInputFieldDriver.enterMin(searchType.ESTIMATEDSALES[0], item, MINMAXINDEXMAP['ESTIMATEDSALES'])
                 if len(searchType.ESTIMATEDSALES) >= 2:
-                    MinMaxInputFieldDriver.enterMax(item, searchType, MINMAXINDEXMAP['ESTIMATEDSALES'])
+                    MinMaxInputFieldDriver.enterMax(searchType.ESTIMATEDSALES[1], item, MINMAXINDEXMAP['ESTIMATEDSALES'])
 
     def enterEstimatedRevenueRange(searchType):
         allElem = driver.find_elements_by_xpath(".//span[@class = 'db-filter-content']")
         for item in allElem:
-            print(item.text)
-            if "Est. Revenue" in item.text:
+            if "Est. Rev" in item.text:
                 if searchType.ESTIMATEDREVENUE[0] is not None:
-                    MinMaxInputFieldDriver.enterMin(item, searchType, MINMAXINDEXMAP['ESTIMATEDREVENUE'])
+                    MinMaxInputFieldDriver.enterMin(searchType.ESTIMATEDREVENUE[0], item, MINMAXINDEXMAP['ESTIMATEDREVENUE'])
                 if len(searchType.ESTIMATEDREVENUE) >= 2:
-                    MinMaxInputFieldDriver.enterMax(item, searchType, MINMAXINDEXMAP['ESTIMATEDREVENUE'])
+                    MinMaxInputFieldDriver.enterMax(searchType.ESTIMATEDREVENUE[1], item, MINMAXINDEXMAP['ESTIMATEDREVENUE'])
 
     def enterReviewsRange(searchType):
         allElem = driver.find_elements_by_xpath(".//span[@class = 'db-filter-content']")
         for item in allElem:
-            print(item.text)
             if "Reviews" in item.text:
                 if searchType.REVIEWS[0] is not None:
-                    MinMaxInputFieldDriver.enterMin(item, searchType, MINMAXINDEXMAP['REVIEWS'])
+                    MinMaxInputFieldDriver.enterMin(searchType.REVIEWS[0], item, MINMAXINDEXMAP['REVIEWS'])
                 if len(searchType.REVIEWS) >= 2:
-                    MinMaxInputFieldDriver.enterMax(item, searchType, MINMAXINDEXMAP['REVIEWS'])
+                    MinMaxInputFieldDriver.enterMax(searchType.REVIEWS[0], item, MINMAXINDEXMAP['REVIEWS'])
 
     def enterRatingRange(searchType):
         allElem = driver.find_elements_by_xpath(".//span[@class = 'db-filter-content']")
         for item in allElem:
-            print(item.text)
             if "Rating" in item.text:
                 if searchType.RATING[0] is not None:
-                    MinMaxInputFieldDriver.enterMin(item, searchType, MINMAXINDEXMAP['RATING'])
+                    MinMaxInputFieldDriver.enterMin(searchType.RATING[0], item, MINMAXINDEXMAP['RATING'])
                 if len(searchType.RATING) >= 2:
-                    MinMaxInputFieldDriver.enterMax(item, searchType, MINMAXINDEXMAP['RATING'])
+                    MinMaxInputFieldDriver.enterMax(searchType.RATING[1], item, MINMAXINDEXMAP['RATING'])
 
-    def enterMin(self, searchType, index):
-        inputMinBox = self.find_elements_by_xpath("//input[@placeholder = 'min']")
+    def enterWeightRange(searchType):
+        allElem = driver.find_elements_by_xpath(".//span[@class = 'db-filter-content']")
+        for item in allElem:
+            if "Weight" in item.text:
+                if searchType.WEIGHT[0] is not None:
+                    MinMaxInputFieldDriver.enterMin(searchType.WEIGHT[0], item, MINMAXINDEXMAP['WEIGHT'])
+                if len(searchType.WEIGHT) >= 2:
+                    MinMaxInputFieldDriver.enterMax(searchType.WEIGHT[1], item, MINMAXINDEXMAP['WEIGHT'])
+
+    def enterNumberOfSellersRange(searchType):
+        allElem = driver.find_elements_by_xpath(".//span[@class = 'db-filter-content']")
+        for item in allElem:
+            if "No. Sellers" in item.text:
+                if searchType.NUMBEROFSELLERS[0] is not None:
+                    MinMaxInputFieldDriver.enterMin(searchType.NUMBEROFSELLERS[0], item, MINMAXINDEXMAP['NUMBEROFSELLERS'])
+                if len(searchType.NUMBEROFSELLERS) >= 2:
+                    MinMaxInputFieldDriver.enterMax(searchType.NUMBEROFSELLERS[1], item, MINMAXINDEXMAP['NUMBEROFSELLERS'])
+
+    def enterListingQualityRange(searchType):
+        allElem = driver.find_elements_by_xpath(".//span[@class = 'db-filter-content']")
+        for item in allElem:
+            if "Listing Quality" in item.text:
+                if searchType.LISTINGQUALITY[0] is not None:
+                    MinMaxInputFieldDriver.enterMin(searchType.LISTINGQUALITY[0], item, MINMAXINDEXMAP['LISTINGQUALITY'])
+                if len(searchType.LISTINGQUALITY) >= 2:
+                    MinMaxInputFieldDriver.enterMax(searchType.LISTINGQUALITY[1], item, MINMAXINDEXMAP['LISTINGQUALITY'])
+
+    def enterMin(searchType, item, index):
+        inputMinBox = item.find_elements_by_xpath("//input[@placeholder = 'min']")
         inputMinBox[index].send_keys(Keys.CONTROL + "a")
         inputMinBox[index].send_keys(Keys.DELETE)
-        inputValMin = str(searchType.NET[0])
+        inputValMin = str(searchType)
         inputMinBox[index].send_keys(inputValMin)
 
-    def enterMax(self, searchType, index):
-        inputMaxBox = self.find_elements_by_xpath("//input[@placeholder = 'max']")
+    def enterMax(searchType, item, index):
+        inputMaxBox = item.find_elements_by_xpath("//input[@placeholder = 'max']")
         inputMaxBox[index].send_keys(Keys.CONTROL + "a")
         inputMaxBox[index].send_keys(Keys.DELETE)
-        inputValMax = str(searchType.NET[1])
+        inputValMax = str(searchType)
         inputMaxBox[index].send_keys(inputValMax)
 
 
