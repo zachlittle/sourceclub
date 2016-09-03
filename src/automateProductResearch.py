@@ -3,6 +3,7 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 import sys
 
+
 path = 'C:/Git/sourceclub/src/chromedriver.exe'
 driver = webdriver.Chrome(path)
 
@@ -77,16 +78,17 @@ class HIGHPRICEPRODUCT:
 
 class AutomateJSWork:
     def __init__(self):
-        AutomateJSWork.Login()
-        AutomateJSWork.clickDatabase()
-        AutomateJSWork.InputSearchTypeData(LOWPRICEPRODUCT)
-        AutomateJSWork.InputSearchTypeData(MEDIUMPRICEPRODUCT)
-        AutomateJSWork.InputSearchTypeData(HIGHPRICEPRODUCT)
-        AutomateJSWork.Logout()
-        driver.quit()
-        '''        except:
+        try:
+            self.Login()
+            self.clickDatabase()
+            self.InputSearchTypeData(LOWPRICEPRODUCT)
+            self.InputSearchTypeData(MEDIUMPRICEPRODUCT)
+            self.InputSearchTypeData(HIGHPRICEPRODUCT)
+            self.Logout()
+            driver.quit()
+        except:
             e = sys.exc_info()[0]
-            print('Exception: ' + str(e))'''
+            print('Exception: ' + str(e))
 
     @staticmethod
     def Login():
