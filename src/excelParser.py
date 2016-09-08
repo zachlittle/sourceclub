@@ -1,33 +1,81 @@
 from openpyxl import load_workbook
 import glob, os, shutil
 import ast
+import xlwt
+import xlrd
+import datetime
 
 excelFileName = 'Excel Files\productSearch9_3Page1.xlsx'
 wb2 = load_workbook(excelFileName)
+sheets = wb2.get_sheet_names()
+
 currentSheet = wb2.get_sheet_by_name('Sheet1')
 productData = {}
 
-CONSTRAINTS = {'Price': {'Min': 1, 'Max': 1000},
-               'Fees': {'Min': 1, 'Max': 10},
-               'Net': {'Min': 1, 'Max': 1000},
-               'Weight': {'Min': .1, 'Max': 10},
-               'Reviews': {'Min': 1, 'Max': 500},
-               'AverageRating': {'Min': 1, 'Max': 6},
-               'Rank': {'Min': 1, 'Max': 1000000000},
-               'EstimatedMonthlySales': {'Min': 1, 'Max': 100000},
-               'EstimatedMonthlyRevenue': {'Min': 1, 'Max': 1000000},
-               'NumberOfSellers': {'Min': 1, 'Max': 1000}
+CONSTRAINTS = {'Price': {'Min': 20, 'Max': 100},
+               'Fees': {},
+               'Net': {'Min': 10},
+               'Weight': {'Max': 10},
+               'Reviews': {'Max': 200},
+               'AverageRating': {},
+               'Rank': {},
+               'EstimatedMonthlySales': {'Min': 300},
+               'EstimatedMonthlyRevenue': {},
+               'NumberOfSellers': {'Max': 15}
               }
 
-class sheetToListGenerator():
-    primaryKeyColumn = 'B'
-    primaryKeyList = {}
-    filteredProducts = [];
+class excelHandler:
 
     def __init__(self):
         self.findAndMoveExcelFiles()
-        self.createPrimaryKeyBasedOnColumn()
-        print(len(self.primaryKeyList))
+        self.renameCVSFilesToXLSX()
+        #self.packageAllFilesRelatedIntoOneWorkbook()
+
+    @staticmethod
+    def findAndMoveExcelFiles():
+        source_dir = 'C:\\Users\maxsm_000\Downloads'
+        dest_dir = 'C:\Git\sourceclub\src\Excel Files'
+        for file in os.listdir(source_dir):
+            if file.endswith(".csv"):
+                shutil.copy2(source_dir + '\\' + file, dest_dir)
+                os.remove(source_dir + '\\' + file)
+
+    @staticmethod
+    def renameCVSFilesToXLSX():
+        source_dir = 'C:\\Git\\sourceclub\\src\\Excel Files'
+        for file in os.listdir(source_dir):
+            if file.endswith(".csv"):
+                pre, ext = os.path.splitext(file)
+                os.rename(source_dir + '\\' + file, 'Excel Files\\' + pre + '.xlsx')
+
+    # def packageAllFilesRelatedIntoOneWorkbook(self):
+    #     workbooksToCombine = []
+    #     wkbk = xlwt.Workbook()
+    #     outsheet = wkbk.add_sheet('Sheet1')
+    #     outrow_idx = 0
+    #     source_dir = 'C:\\Git\\sourceclub\\src\\Excel Files'
+    #     for file in os.listdir(source_dir):
+    #         if 'Jungle' in file:
+    #             workbooksToCombine.append(file)
+    #     for workbook in workbooksToCombine:
+    #         print(source_dir + '\\' + workbook)
+    #         wb2 = load_workbook(source_dir + '\\' + workbook)
+    #         insheet = wb2.worksheets[0]
+    #         for row_idx in insheet['A1':'B1']:
+    #             for col_idx in range(insheet):
+    #                 outsheet.write(outrow_idx, col_idx,
+    #                                insheet.cell_value(row_idx, col_idx))
+    #             outrow_idx += 1
+    #     date = datetime.date
+    #     wkbk.save(source_dir + '\\combinedFiles' + date + '.xlsx')
+
+class sheetToListGenerator:
+    primaryKeyColumn = 'A'
+    primaryKeyList = {}
+    filteredProducts = [];
+
+    def __init__(self, sheet):
+        self.createPrimaryKeyBasedOnColumn(sheet)
         self.populateDataStructure()
         self.outputStructure()
         self.filterByConstraints()
@@ -45,49 +93,36 @@ class sheetToListGenerator():
             print(product)
         print('--------------------FILTERSTATS---------------------')
 
-
     def filterByConstraints(self):
         productsToRemove = []
-        productsToRemoveByIndex = []
         for keyIndex, key in enumerate(self.primaryKeyList):
             for category in productData[key]:
                 if CONSTRAINTS.get(str(category)) is not None:
                     if type(productData[key][str(category)]) is not str:
-                        if productData[key][str(category)] < CONSTRAINTS[str(category)]['Min']:
-                            productsToRemove.append(key)
-                            productsToRemoveByIndex.append(keyIndex)
-                            break
-                        elif productData[key][str(category)] > CONSTRAINTS[str(category)]['Max']:
-                            productsToRemove.append(key)
-                            productsToRemoveByIndex.append(keyIndex)
-                            break
-        self.removeProductsByIndex(productsToRemove, productsToRemoveByIndex)
+                        if 'Min' in CONSTRAINTS[str(category)].keys():
+                            if productData[key][str(category)] < CONSTRAINTS[str(category)]['Min']:
+                                productsToRemove.append(key)
+                                break
+                        if 'Max' in CONSTRAINTS[str(category)].keys():
+                            if productData[key][str(category)] > CONSTRAINTS[str(category)]['Max']:
+                                productsToRemove.append(key)
+                                break
+        self.removeProductsByIndex(productsToRemove)
 
-    def removeProductsByIndex(self, productsToRemove, productsToRemoveByIndex):
+    def removeProductsByIndex(self, productsToRemove):
         for product in productsToRemove:
             self.filteredProducts.append(product)
             del productData[product]
             del self.primaryKeyList[product]
 
-
-
-    @staticmethod
-    def findAndMoveExcelFiles():
-        source_dir = 'C:\\Users\maxsm_000\Downloads'
-        dest_dir = 'C:\Git\sourceclub\src\Excel Files'
-        for file in os.listdir(source_dir):
-            if file.endswith(".csv"):
-                shutil.copy2(source_dir + '\\' + file, dest_dir)
-                os.remove(source_dir + '\\' + file)
-
-    def createPrimaryKeyBasedOnColumn(self):
-        for i, row in enumerate(range(4, currentSheet.max_row + 1)):
+    def createPrimaryKeyBasedOnColumn(self, sheet):
+        for i, row in enumerate(range(4, sheet.max_row + 1)):
             primaryKey = currentSheet['' + self.primaryKeyColumn + '' + str(row)].value
             productData.setdefault('' + primaryKey + '', {})
             self.primaryKeyList.setdefault('' + primaryKey + '', {})
 
     def populateDataStructure(self):
-        self.createDataItem('ASIN', 'A')
+        self.createDataItem('Name', 'B')
         self.createDataItem('Price', 'F')
         self.createDataItem('Brand', 'C')
         self.createDataItem('Seller', 'D')
@@ -114,8 +149,8 @@ class sheetToListGenerator():
     def outputStructure():
         for i, key in enumerate(sheetToListGenerator.primaryKeyList):
             print('--------------Item' + str(i) + '------------------')
-            print('Name: ' + key)
-            print('ASIN: ' + productData[key]['ASIN'])
+            print('ASIN: ' + key)
+            print('Name: ' + productData[key]['Name'])
             print('Brand: ' + str(productData[key]['Brand']))
             print('Price: ' + str(productData[key]['Price']))
             print('Seller: ' + str(productData[key]['Seller']))
@@ -131,4 +166,4 @@ class sheetToListGenerator():
             print('EstimatedMonthlyRevenue: ' + str(productData[key]['EstimatedMonthlyRevenue']))
             print('NumberOfSellers: ' + str(productData[key]['NumberOfSellers']))
 
-sheetToListGenerator()
+sheetToListGenerator(currentSheet)

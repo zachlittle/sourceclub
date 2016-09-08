@@ -26,17 +26,17 @@ class LOWPRICEPRODUCT:
     CATEGORIES = ['Home Improvement', 'Automotive', 'Clothing', 'Office Products']
     PRODUCTTIER = ['Standard', 'Oversize']
     SELLER = ['Amazon', 'Fulfilled By Amazon', 'Fulfilled By Merchant']
-    SEARCHKEYWORD = ['dogs']
-    EXCLUDEKEYWORD = ['cats, goats, mothar']
-    PRICERANGE = ['10', '15']
-    NET = ['8']
-    RANK = ['1', '10000']
-    ESTIMATEDSALES = ['200', '4000']
+    SEARCHKEYWORD = ['']
+    EXCLUDEKEYWORD = ['bible']
+    PRICERANGE = ['20', '100']
+    NET = ['10']
+    RANK = ['', '']
+    ESTIMATEDSALES = ['300']
     ESTIMATEDREVENUE = ['3000', '200']
-    REVIEWS = ['300', '500']
-    RATING = ['50', '75']
-    WEIGHT = ['5', '10']
-    NUMBEROFSELLERS = ['10', '100']
+    REVIEWS = ['', '200']
+    RATING = ['', '']
+    WEIGHT = ['','10']
+    NUMBEROFSELLERS = ['', '15']
     LISTINGQUALITY = ['5', '90']
 
 
@@ -63,7 +63,7 @@ class HIGHPRICEPRODUCT:
     PRODUCTTIER = ['Standard', 'Oversize']
     SELLER = ['Amazon', 'Fulfilled By Amazon', 'Fulfilled By Merchant']
     SEARCHKEYWORD = ['dogs']
-    EXCLUDEKEYWORD = ['cats, goats, mothar']
+    EXCLUDEKEYWORD = ['nike']
     PRICERANGE = ['51', '80']
     NET = ['8']
     RANK = ['1', '2']
@@ -78,17 +78,15 @@ class HIGHPRICEPRODUCT:
 
 class AutomateJSWork:
     def __init__(self):
-        try:
-            self.Login()
-            self.clickDatabase()
-            self.InputSearchTypeData(LOWPRICEPRODUCT)
-            self.InputSearchTypeData(MEDIUMPRICEPRODUCT)
-            self.InputSearchTypeData(HIGHPRICEPRODUCT)
-            self.Logout()
-            driver.quit()
-        except:
+        #try:
+        self.Login()
+        self.clickDatabase()
+        self.InputSearchTypeData(LOWPRICEPRODUCT)
+        self.Logout()
+        driver.quit()
+        '''except:
             e = sys.exc_info()[0]
-            print('Exception: ' + str(e))
+            print('Exception: ' + str(e))'''
 
     @staticmethod
     def Login():
@@ -109,22 +107,31 @@ class AutomateJSWork:
         element2 = driver.find_element_by_xpath(".//a[@href = '/users/sign_out']")
         element2.click()
 
+    @staticmethod
     def clickSearch(self):
         element = driver.find_element_by_class_name('make-search')
         element.click()
 
 
-    def InputSearchTypeData(searchType):
+    def InputSearchTypeData(self, searchType):
         print("CURRENTLY RUNNING " + str(searchType) + " SEARCH")
         driver.implicitly_wait(10)
         driver.find_element_by_class_name('filter-reset-btn').click()
         AutomateJSWork.inputData(searchType)
+        AutomateJSWork.clickResultsPerPage()
         AutomateJSWork.clickSearch()
         AutomateJSWork.clickExportToExcel()
 
     @staticmethod
     def clickDatabase():
         driver.find_element_by_class_name('database-nav').click()
+
+    @staticmethod
+    def clickResultsPerPage():
+        element = driver.find_element_by_class_name('change-page-counter')
+        element.click()
+        element2 = element.find_element_by_xpath("//option[@value = '200']")
+        element2.click()
 
     def inputData(searchType):
         AutomateJSWork.clickDesiredCategories(searchType)
@@ -316,3 +323,4 @@ class MinMaxInputFieldDriver:
 
 if __name__ == '__main__':
     AutomateJSWork()
+
