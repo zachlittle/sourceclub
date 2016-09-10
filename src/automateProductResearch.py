@@ -32,7 +32,7 @@ class LOWPRICEPRODUCT:
     NET = ['10']
     RANK = ['', '']
     ESTIMATEDSALES = ['300']
-    ESTIMATEDREVENUE = ['3000', '200']
+    ESTIMATEDREVENUE = ['', '']
     REVIEWS = ['', '200']
     RATING = ['', '']
     WEIGHT = ['','10']

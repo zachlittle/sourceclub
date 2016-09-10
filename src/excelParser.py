@@ -5,11 +5,8 @@ import xlwt
 import xlrd
 import datetime
 
-excelFileName = 'Excel Files\productSearch9_3Page1.xlsx'
-wb2 = load_workbook(excelFileName)
-sheets = wb2.get_sheet_names()
-
-currentSheet = wb2.get_sheet_by_name('Sheet1')
+global mostRecentExcelFile
+global currentSheet
 productData = {}
 
 CONSTRAINTS = {'Price': {'Min': 20, 'Max': 100},
@@ -29,7 +26,46 @@ class excelHandler:
     def __init__(self):
         self.findAndMoveExcelFiles()
         self.renameCVSFilesToXLSX()
+        self.pickMostRecentExcelFileToParse()
+        self.selectSheetByFilePath()
         #self.packageAllFilesRelatedIntoOneWorkbook()
+
+    @staticmethod
+    def selectSheetByFilePath():
+        global currentSheet
+        excelFileName = 'C:\\Git\\sourceclub\\src\\Excel Files\\' + str(mostRecentExcelFile)
+        wb2 = load_workbook(excelFileName)
+        sheetName = wb2.get_sheet_names()
+        currentSheet = wb2.get_sheet_by_name(sheetName[0])
+        sheetToListGenerator(currentSheet)
+
+    @staticmethod
+    def pickMostRecentExcelFileToParse():
+        import os
+        dir = 'C:\\Git\\sourceclub\\src\\Excel Files\\'
+        guyList = []
+        maximumModTime = 0
+        for file in os.listdir(dir):
+            if file.endswith(".xlsx"):
+                guyList.append(os.path.getmtime(str(dir) + "" + str(file)))
+
+        for modTime in guyList:
+            if modTime > maximumModTime:
+                maximumModTime = modTime
+        import datetime
+        dt_obj = datetime.datetime.utcfromtimestamp(maximumModTime)
+        print("Most Recent Excel File To Parse: " + str(dt_obj))
+        excelHandler.helperMethodCuzImToBakedToThinkOfAName(dt_obj, dir)
+
+    @staticmethod
+    def helperMethodCuzImToBakedToThinkOfAName(dateTime, dir):
+        global mostRecentExcelFile
+        for file in os.listdir(dir):
+            print("----------------------------------------------------------------------------------")
+            currentFileDateTime = datetime.datetime.utcfromtimestamp(os.path.getmtime(str(dir) + "" + str(file)))
+            if currentFileDateTime == dateTime:
+                print("Most Recent File: " + file)
+                mostRecentExcelFile = file
 
     @staticmethod
     def findAndMoveExcelFiles():
@@ -166,4 +202,4 @@ class sheetToListGenerator:
             print('EstimatedMonthlyRevenue: ' + str(productData[key]['EstimatedMonthlyRevenue']))
             print('NumberOfSellers: ' + str(productData[key]['NumberOfSellers']))
 
-sheetToListGenerator(currentSheet)
+excelHandler()
