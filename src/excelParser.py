@@ -7,16 +7,17 @@ import datetime
 
 global mostRecentExcelFile
 global currentSheet
+global excelFileDir
 productData = {}
 
 CONSTRAINTS = {'Price': {'Min': 20, 'Max': 100},
                'Fees': {},
                'Net': {'Min': 10},
                'Weight': {'Max': 10},
-               'Reviews': {'Max': 200},
+               'Reviews': {},
                'AverageRating': {},
                'Rank': {},
-               'EstimatedMonthlySales': {'Min': 300},
+               'EstimatedMonthlySales': {'Min': 5},
                'EstimatedMonthlyRevenue': {},
                'NumberOfSellers': {'Max': 15}
               }
@@ -24,86 +25,63 @@ CONSTRAINTS = {'Price': {'Min': 20, 'Max': 100},
 class excelHandler:
 
     def __init__(self):
+        global excelFileDir
+        excelFileDir = 'C:\\Git\\sourceclub\\src\\Excel Files\\'
         self.findAndMoveExcelFiles()
-        self.renameCVSFilesToXLSX()
-        self.pickMostRecentExcelFileToParse()
+        self.renameCSVFilesToXLSX()
+        self.findMostRecentFileBasedOnMT()
         self.selectSheetByFilePath()
         #self.packageAllFilesRelatedIntoOneWorkbook()
 
     @staticmethod
     def selectSheetByFilePath():
         global currentSheet
-        excelFileName = 'C:\\Git\\sourceclub\\src\\Excel Files\\' + str(mostRecentExcelFile)
+        excelFileName = excelFileDir + str(mostRecentExcelFile)
         wb2 = load_workbook(excelFileName)
         sheetName = wb2.get_sheet_names()
         currentSheet = wb2.get_sheet_by_name(sheetName[0])
         sheetToListGenerator(currentSheet)
 
     @staticmethod
-    def pickMostRecentExcelFileToParse():
+    def findMostRecentFileBasedOnMT():
         import os
-        dir = 'C:\\Git\\sourceclub\\src\\Excel Files\\'
         guyList = []
         maximumModTime = 0
-        for file in os.listdir(dir):
-            if file.endswith(".xlsx"):
-                guyList.append(os.path.getmtime(str(dir) + "" + str(file)))
-
-        for modTime in guyList:
-            if modTime > maximumModTime:
-                maximumModTime = modTime
-        import datetime
+        [guyList.append(os.path.getmtime(excelFileDir + "" + str(file))) for file in os.listdir(excelFileDir) if file.endswith(".xlsx")]
+        fileModTimes = [modTime for modTime in guyList if modTime > maximumModTime]
+        [float(modTime) for modTime in fileModTimes]
+        maximumModTime = max(fileModTimes)
         dt_obj = datetime.datetime.utcfromtimestamp(maximumModTime)
         print("Most Recent Excel File To Parse: " + str(dt_obj))
-        excelHandler.helperMethodCuzImToBakedToThinkOfAName(dt_obj, dir)
+        excelHandler.selectMostRecentFileBasedOnMT(dt_obj)
 
     @staticmethod
-    def helperMethodCuzImToBakedToThinkOfAName(dateTime, dir):
+    def selectMostRecentFileBasedOnMT(dateTime):
         global mostRecentExcelFile
-        for file in os.listdir(dir):
+        for file in os.listdir(excelFileDir):
             print("----------------------------------------------------------------------------------")
-            currentFileDateTime = datetime.datetime.utcfromtimestamp(os.path.getmtime(str(dir) + "" + str(file)))
+            currentFileDateTime = datetime.datetime.utcfromtimestamp(os.path.getmtime(excelFileDir + "" + str(file)))
             if currentFileDateTime == dateTime:
                 print("Most Recent File: " + file)
                 mostRecentExcelFile = file
 
-    @staticmethod
-    def findAndMoveExcelFiles():
+    def findAndMoveExcelFiles(self):
         source_dir = 'C:\\Users\maxsm_000\Downloads'
-        dest_dir = 'C:\Git\sourceclub\src\Excel Files'
-        for file in os.listdir(source_dir):
-            if file.endswith(".csv"):
-                shutil.copy2(source_dir + '\\' + file, dest_dir)
-                os.remove(source_dir + '\\' + file)
+        [self.copyFilesToExcelDir(file, source_dir) for file in os.listdir(source_dir) if file.endswith(".csv")]
 
     @staticmethod
-    def renameCVSFilesToXLSX():
-        source_dir = 'C:\\Git\\sourceclub\\src\\Excel Files'
-        for file in os.listdir(source_dir):
-            if file.endswith(".csv"):
-                pre, ext = os.path.splitext(file)
-                os.rename(source_dir + '\\' + file, 'Excel Files\\' + pre + '.xlsx')
+    def copyFilesToExcelDir(file, source_dir):
+        shutil.copy2(source_dir + '\\' + file, excelFileDir)
+        os.remove(source_dir + '\\' + file)
 
-    # def packageAllFilesRelatedIntoOneWorkbook(self):
-    #     workbooksToCombine = []
-    #     wkbk = xlwt.Workbook()
-    #     outsheet = wkbk.add_sheet('Sheet1')
-    #     outrow_idx = 0
-    #     source_dir = 'C:\\Git\\sourceclub\\src\\Excel Files'
-    #     for file in os.listdir(source_dir):
-    #         if 'Jungle' in file:
-    #             workbooksToCombine.append(file)
-    #     for workbook in workbooksToCombine:
-    #         print(source_dir + '\\' + workbook)
-    #         wb2 = load_workbook(source_dir + '\\' + workbook)
-    #         insheet = wb2.worksheets[0]
-    #         for row_idx in insheet['A1':'B1']:
-    #             for col_idx in range(insheet):
-    #                 outsheet.write(outrow_idx, col_idx,
-    #                                insheet.cell_value(row_idx, col_idx))
-    #             outrow_idx += 1
-    #     date = datetime.date
-    #     wkbk.save(source_dir + '\\combinedFiles' + date + '.xlsx')
+    def renameCSVFilesToXLSX(self):
+        [self.changeFileName(file) for file in os.listdir(excelFileDir) if file.endswith(".csv")]
+
+    @staticmethod
+    def changeFileName(file):
+        pre, ext = os.path.splitext(file)
+        os.rename(excelFileDir + '\\' + file, 'Excel Files\\' + pre + '.xlsx')
+
 
 class sheetToListGenerator:
     primaryKeyColumn = 'A'
@@ -202,4 +180,7 @@ class sheetToListGenerator:
             print('EstimatedMonthlyRevenue: ' + str(productData[key]['EstimatedMonthlyRevenue']))
             print('NumberOfSellers: ' + str(productData[key]['NumberOfSellers']))
 
-excelHandler()
+if __name__ == "__main__":
+    excelHandler()
+# TODO: I may not want this below
+# excelHandler()
