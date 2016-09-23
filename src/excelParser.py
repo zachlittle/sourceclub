@@ -77,19 +77,38 @@ class excelHandler:
         [TransferExcelData.ConvertCSVToXLSX(file) for file in os.listdir(excelFileDir) if file.endswith(".csv")]
 
 class TransferExcelData:
+    currentFileParsing = ""
     #TODO: Will handle all renaming of csv files as it requires full data reentry not just ext. rename.
     #TODO: Will handle merging and extraction of multiple flat files
 
     @staticmethod
     def ConvertCSVToXLSX(file):
         workBook = TransferExcelData.stripAndReEnterWBData(file)
-        workBook.save(excelFileDir + "my_file.xlsx")
+        workBook.save(excelFileDir + str(TransferExcelData.uniqueStampGenerator()) + ".xlsx")
+        TransferExcelData.deleteOldCSVFile()
+
+    @staticmethod
+    def deleteOldCSVFile():
+        os.remove(excelFileDir + str(TransferExcelData.currentFileParsing))
+
 
     @staticmethod
     def uniqueStampGenerator():
+        currentTime = datetime.datetime.now().time()
+        newFileName = "productResearch_" + str(TransferExcelData.removeNonAlphaNumeric(currentTime))
+        return newFileName
+
+    @staticmethod
+    def removeNonAlphaNumeric(string):
+        modifiedString = ""
+        for i, char in enumerate(str(string)):
+            if char.isalpha() or char.isdigit():
+                modifiedString += char
+        return modifiedString
 
     @staticmethod
     def stripAndReEnterWBData(file):
+        TransferExcelData.currentFileParsing = file
         wb = Workbook()
         sheet = wb.active
         excelFile = excelFileDir + str(file)
@@ -107,7 +126,7 @@ class TransferExcelData:
 class sheetToListGenerator:
     primaryKeyColumn = 'A'
     primaryKeyList = {}
-    filteredProducts = [];
+    filteredProducts = []
 
     def __init__(self, sheet):
         self.createPrimaryKeyBasedOnColumn(sheet)
