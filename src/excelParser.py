@@ -1,9 +1,8 @@
 from openpyxl import load_workbook
 import glob, os, shutil
-import ast
-import xlwt
-import xlrd
 import datetime
+import csv
+from openpyxl import Workbook
 
 global mostRecentExcelFile
 global currentSheet
@@ -40,7 +39,7 @@ class excelHandler:
         wb2 = load_workbook(excelFileName)
         sheetName = wb2.get_sheet_names()
         currentSheet = wb2.get_sheet_by_name(sheetName[0])
-        sheetToListGenerator(currentSheet)
+        # sheetToListGenerator(currentSheet)
 
     @staticmethod
     def findMostRecentFileBasedOnMT():
@@ -75,12 +74,34 @@ class excelHandler:
         os.remove(source_dir + '\\' + file)
 
     def renameCSVFilesToXLSX(self):
-        [self.changeFileName(file) for file in os.listdir(excelFileDir) if file.endswith(".csv")]
+        [TransferExcelData.ConvertCSVToXLSX(file) for file in os.listdir(excelFileDir) if file.endswith(".csv")]
+
+class TransferExcelData:
+    #TODO: Will handle all renaming of csv files as it requires full data reentry not just ext. rename.
+    #TODO: Will handle merging and extraction of multiple flat files
 
     @staticmethod
-    def changeFileName(file):
-        pre, ext = os.path.splitext(file)
-        os.rename(excelFileDir + '\\' + file, 'Excel Files\\' + pre + '.xlsx')
+    def ConvertCSVToXLSX(file):
+        workBook = TransferExcelData.stripAndReEnterWBData(file)
+        workBook.save(excelFileDir + "my_file.xlsx")
+
+    @staticmethod
+    def uniqueStampGenerator():
+
+    @staticmethod
+    def stripAndReEnterWBData(file):
+        wb = Workbook()
+        sheet = wb.active
+        excelFile = excelFileDir + str(file)
+        CSV_SEPARATOR = ","
+        with open(excelFile) as f:
+            reader = csv.reader(f)
+            for r, row in enumerate(reader):
+                for c, col in enumerate(row):
+                    for idx, val in enumerate(col.split(CSV_SEPARATOR)):
+                        cell = sheet.cell(row=r + 1, column=c + 1)
+                        cell.value = val
+        return wb
 
 
 class sheetToListGenerator:
@@ -183,4 +204,4 @@ class sheetToListGenerator:
 if __name__ == "__main__":
     excelHandler()
 # TODO: I may not want this below
-# excelHandler()
+excelHandler()

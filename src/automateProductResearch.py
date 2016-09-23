@@ -81,11 +81,19 @@ class AutomateJSWork:
         print("CURRENTLY RUNNING " + str(MEDIUMPRICEPRODUCT) + " SEARCH")
         element = driver.find_element_by_class_name('filter-reset-btn')
         element.click()
-        driver.implicitly_wait(10000)
+        # driver.implicitly_wait(webdriver.Chrome, 10)
+        self.waitForLoad('category-aggregations')
         self.inputData(MEDIUMPRICEPRODUCT)
         self.clickResultsPerPage()
         self.clickSearch()
         self.clickExportToExcel()
+
+    def waitForLoad(self, className):
+        from selenium.webdriver.common.by import By
+        from selenium.webdriver.support.ui import WebDriverWait
+        from selenium.webdriver.support import expected_conditions as EC
+        Wait = WebDriverWait(driver, 10)
+        Wait.until(EC.presence_of_element_located((By.CLASS_NAME, className)))
 
     @staticmethod
     def clickDatabase():
